@@ -1,6 +1,7 @@
-use anyhow::Context;
-use serde::{Serialize, Deserialize};
-use serde_json::{Map, Value};
+mod serror;
+
+use anyhow::{anyhow, Context};
+pub use serror::Serror;
 
 pub fn serialize_error(e: anyhow::Error) -> String {
     let fallback = format!("{e:#?}");
@@ -24,34 +25,33 @@ pub fn try_serialize_error_pretty(e: anyhow::Error) -> anyhow::Result<String> {
     Ok(res)
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Serror {
-    pub error: String,
-    pub trace: Vec<String>,
+pub fn deserialize_error(json: String) -> anyhow::Error {
+    serror_into_error(deserialize_serror(json))
 }
 
-impl TryFrom<anyhow::Error> for Serror {
-    type Error = anyhow::Error;
-    fn try_from(e: anyhow::Error) -> Result<Serror, anyhow::Error> {
-        let e = serde_error::Error::new(&*e);
-        let e = serde_json::to_string(&e).context("failed to serialize error")?;
-        let e: Map<String, Value> =
-            serde_json::from_str(&e).context("failed to deserialize error")?;
-        let mut trace = Vec::<String>::new();
-        collapse_error_into_trace(e, &mut trace);
-        let serror = Serror {
-            error: trace.get(0).cloned().unwrap_or_default(),
-            trace,
-        };
-        Ok(serror)
-    }
+pub fn deserialize_serror(json: String) -> Serror {
+    try_deserialize_serror(&json).unwrap_or(Serror {
+        error: json.clone(),
+        trace: vec![json],
+    })
 }
 
-fn collapse_error_into_trace(mut e: Map<String, Value>, trace: &mut Vec<String>) {
-    if let Some(Value::String(description)) = e.remove("description") {
-        trace.push(description);
+pub fn try_deserialize_serror(json: &str) -> anyhow::Result<Serror> {
+    serde_json::from_str(json).context("failed to deserialize string into Serror")
+}
+
+fn serror_into_error(mut serror: Serror) -> anyhow::Error {
+    let first = serror.trace.pop().unwrap_or(String::from("no error msg"));
+
+    let mut e = anyhow!("{first}");
+
+    loop {
+        let msg = serror.trace.pop();
+        if msg.is_none() {
+            break;
+        }
+        e = e.context(msg.unwrap());
     }
-    if let Some(Value::Object(e)) = e.remove("source") {
-        collapse_error_into_trace(e, trace)
-    }
+
+    e
 }
