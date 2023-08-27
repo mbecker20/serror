@@ -9,6 +9,17 @@ pub fn serialize_error(e: anyhow::Error) -> String {
 
 pub fn try_serialize_error(e: anyhow::Error) -> anyhow::Result<String> {
     let serror: Serror = e.try_into()?;
+    let res = serde_json::to_string(&serror)?;
+    Ok(res)
+}
+
+pub fn serialize_error_pretty(e: anyhow::Error) -> String {
+    let fallback = format!("{e:#?}");
+    try_serialize_error_pretty(e).unwrap_or(fallback)
+}
+
+pub fn try_serialize_error_pretty(e: anyhow::Error) -> anyhow::Result<String> {
+    let serror: Serror = e.try_into()?;
     let res = serde_json::to_string_pretty(&serror)?;
     Ok(res)
 }
