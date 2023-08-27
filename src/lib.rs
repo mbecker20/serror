@@ -7,7 +7,7 @@ pub fn serialize_error(e: anyhow::Error) -> String {
     try_serialize_error(e).unwrap_or(fallback)
 }
 
-fn try_serialize_error(e: anyhow::Error) -> anyhow::Result<String> {
+pub fn try_serialize_error(e: anyhow::Error) -> anyhow::Result<String> {
     let serror: Serror = e.try_into()?;
     let res = serde_json::to_string_pretty(&serror)?;
     Ok(res)
