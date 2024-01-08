@@ -1,6 +1,6 @@
 mod serror;
 
-use anyhow::{anyhow, Context};
+use anyhow::Context;
 pub use serror::Serror;
 
 pub fn serialize_error(e: anyhow::Error) -> String {
@@ -9,7 +9,7 @@ pub fn serialize_error(e: anyhow::Error) -> String {
 }
 
 pub fn try_serialize_error(e: anyhow::Error) -> anyhow::Result<String> {
-  let serror: Serror = e.try_into()?;
+  let serror: Serror = e.into();
   let res = serde_json::to_string(&serror)?;
   Ok(res)
 }
@@ -20,7 +20,7 @@ pub fn serialize_error_pretty(e: anyhow::Error) -> String {
 }
 
 pub fn try_serialize_error_pretty(e: anyhow::Error) -> anyhow::Result<String> {
-  let serror: Serror = e.try_into()?;
+  let serror: Serror = e.into();
   let res = serde_json::to_string_pretty(&serror)?;
   Ok(res)
 }
@@ -41,17 +41,16 @@ pub fn try_deserialize_serror(json: &str) -> anyhow::Result<Serror> {
 }
 
 fn serror_into_error(mut serror: Serror) -> anyhow::Error {
-  let first = serror.trace.pop().unwrap_or(String::from("no error msg"));
+  let mut e = match serror.trace.pop() {
+    None => return anyhow::Error::msg(serror.error),
+    Some(msg) => anyhow::Error::msg(msg),
+  };
 
-  let mut e = anyhow!("{first}");
-
-  loop {
-    let msg = serror.trace.pop();
-    if msg.is_none() {
-      break;
-    }
-    e = e.context(msg.unwrap());
+  while let Some(msg) = serror.trace.pop() {
+    e = e.context(msg);
   }
+
+  e = e.context(serror.error);
 
   e
 }
