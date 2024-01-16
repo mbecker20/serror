@@ -7,7 +7,7 @@ pub use serror::Serror;
 #[cfg(feature = "axum")]
 mod axum;
 #[cfg(feature = "axum")]
-pub use axum::{AppError, AppResult, AuthError, AuthResult};
+pub use crate::axum::{AppError, AppResult, AuthError, AuthResult};
 
 pub fn serialize_error(e: anyhow::Error) -> String {
   let fallback = format!("{e:#?}");
