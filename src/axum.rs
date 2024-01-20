@@ -36,7 +36,12 @@ pub struct AuthError(anyhow::Error);
 
 impl IntoResponse for AuthError {
   fn into_response(self) -> Response {
-    (StatusCode::UNAUTHORIZED, serialize_error(self.0)).into_response()
+    (
+      StatusCode::UNAUTHORIZED,
+      TypedHeader(ContentType::json()),
+      serialize_error(self.0),
+    )
+      .into_response()
   }
 }
 
