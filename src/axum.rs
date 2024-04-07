@@ -15,7 +15,7 @@ impl IntoResponse for AppError {
     (
       StatusCode::INTERNAL_SERVER_ERROR,
       TypedHeader(ContentType::json()),
-      serialize_error(self.0),
+      serialize_error(&self.0),
     )
       .into_response()
   }
@@ -39,7 +39,7 @@ impl IntoResponse for AuthError {
     (
       StatusCode::UNAUTHORIZED,
       TypedHeader(ContentType::json()),
-      serialize_error(self.0),
+      serialize_error(&self.0),
     )
       .into_response()
   }

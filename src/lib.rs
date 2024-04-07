@@ -9,23 +9,23 @@ mod axum;
 #[cfg(feature = "axum")]
 pub use crate::axum::{AppError, AppResult, AuthError, AuthResult};
 
-pub fn serialize_error(e: anyhow::Error) -> String {
+pub fn serialize_error(e: &anyhow::Error) -> String {
   let fallback = format!("{e:#?}");
   try_serialize_error(e).unwrap_or(fallback)
 }
 
-pub fn try_serialize_error(e: anyhow::Error) -> anyhow::Result<String> {
+pub fn try_serialize_error(e: &anyhow::Error) -> anyhow::Result<String> {
   let serror: Serror = e.into();
   let res = serde_json::to_string(&serror)?;
   Ok(res)
 }
 
-pub fn serialize_error_pretty(e: anyhow::Error) -> String {
+pub fn serialize_error_pretty(e: &anyhow::Error) -> String {
   let fallback = format!("{e:#?}");
   try_serialize_error_pretty(e).unwrap_or(fallback)
 }
 
-pub fn try_serialize_error_pretty(e: anyhow::Error) -> anyhow::Result<String> {
+pub fn try_serialize_error_pretty(e: &anyhow::Error) -> anyhow::Result<String> {
   let serror: Serror = e.into();
   let res = serde_json::to_string_pretty(&serror)?;
   Ok(res)
