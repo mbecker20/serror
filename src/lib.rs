@@ -10,8 +10,7 @@ mod axum;
 pub use crate::axum::{AppError, AppResult, AuthError, AuthResult};
 
 pub fn serialize_error(e: &anyhow::Error) -> String {
-  let fallback = format!("{e:#?}");
-  try_serialize_error(e).unwrap_or(fallback)
+  try_serialize_error(e).unwrap_or_else(|_| format!("{e:#?}"))
 }
 
 pub fn try_serialize_error(e: &anyhow::Error) -> anyhow::Result<String> {
@@ -21,8 +20,7 @@ pub fn try_serialize_error(e: &anyhow::Error) -> anyhow::Result<String> {
 }
 
 pub fn serialize_error_pretty(e: &anyhow::Error) -> String {
-  let fallback = format!("{e:#?}");
-  try_serialize_error_pretty(e).unwrap_or(fallback)
+  try_serialize_error_pretty(e).unwrap_or_else(|_| format!("{e:#?}"))
 }
 
 pub fn try_serialize_error_pretty(e: &anyhow::Error) -> anyhow::Result<String> {
@@ -36,9 +34,9 @@ pub fn deserialize_error(json: String) -> anyhow::Error {
 }
 
 pub fn deserialize_serror(json: String) -> Serror {
-  try_deserialize_serror(&json).unwrap_or(Serror {
+  try_deserialize_serror(&json).unwrap_or_else(|_| Serror {
     error: json.clone(),
-    trace: vec![json],
+    trace: Default::default(),
   })
 }
 
