@@ -6,26 +6,29 @@ use axum_extra::{headers::ContentType, TypedHeader};
 
 use crate::serialize_error;
 
-pub type Result<const HTTP_CODE: u16, T> = std::result::Result<T, Error<HTTP_CODE>>;
+pub type Result<T> = std::result::Result<T, Error>;
 
-pub struct Error<const HTTP_CODE: u16>(anyhow::Error);
+/// Intermediate error type which can be converted to from any error using `?`.
+/// The standard `impl From<E> for Error` will attach StatusCode::INTERNAL_SERVER_ERROR,
+/// so if an alternative StatusCode is desired, you must use `.map_err` for conversion.
+pub struct Error(StatusCode, anyhow::Error);
 
-impl<const HTTP_CODE: u16> IntoResponse for Error<HTTP_CODE> {
+impl IntoResponse for Error {
   fn into_response(self) -> Response {
     (
-      StatusCode::from_u16(HTTP_CODE).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR),
+      self.0,
       TypedHeader(ContentType::json()),
-      serialize_error(&self.0),
+      serialize_error(&self.1),
     )
       .into_response()
   }
 }
 
-impl<const HTTP_CODE: u16, E> From<E> for Error<HTTP_CODE>
+impl<E> From<E> for Error
 where
   E: Into<anyhow::Error>,
 {
   fn from(err: E) -> Self {
-    Self(err.into())
+    Self(StatusCode::INTERNAL_SERVER_ERROR, err.into())
   }
 }
