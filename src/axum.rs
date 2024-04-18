@@ -10,8 +10,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 /// Intermediate error type which can be converted to from any error using `?`.
 /// The standard `impl From<E> for Error` will attach StatusCode::INTERNAL_SERVER_ERROR,
-/// so if an alternative StatusCode is desired, you must use `.map_err` for conversion.
-pub struct Error(StatusCode, anyhow::Error);
+/// so if an alternative StatusCode is desired, you must use `.map_err` to serror::Error before using `?`.
+pub struct Error(pub StatusCode, pub anyhow::Error);
 
 impl IntoResponse for Error {
   fn into_response(self) -> Response {
