@@ -6,14 +6,14 @@ use axum_extra::{headers::ContentType, TypedHeader};
 
 use crate::serialize_error;
 
-pub type AppResult<T> = Result<T, AppError>;
+pub type Result<const HTTP_CODE: u16, T> = std::result::Result<T, Error<HTTP_CODE>>;
 
-pub struct AppError(anyhow::Error);
+pub struct Error<const HTTP_CODE: u16>(anyhow::Error);
 
-impl IntoResponse for AppError {
+impl<const HTTP_CODE: u16> IntoResponse for Error<HTTP_CODE> {
   fn into_response(self) -> Response {
     (
-      StatusCode::INTERNAL_SERVER_ERROR,
+      StatusCode::from_u16(HTTP_CODE).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR),
       TypedHeader(ContentType::json()),
       serialize_error(&self.0),
     )
@@ -21,31 +21,7 @@ impl IntoResponse for AppError {
   }
 }
 
-impl<E> From<E> for AppError
-where
-  E: Into<anyhow::Error>,
-{
-  fn from(err: E) -> Self {
-    Self(err.into())
-  }
-}
-
-pub type AuthResult<T> = Result<T, AuthError>;
-
-pub struct AuthError(anyhow::Error);
-
-impl IntoResponse for AuthError {
-  fn into_response(self) -> Response {
-    (
-      StatusCode::UNAUTHORIZED,
-      TypedHeader(ContentType::json()),
-      serialize_error(&self.0),
-    )
-      .into_response()
-  }
-}
-
-impl<E> From<E> for AuthError
+impl<const HTTP_CODE: u16, E> From<E> for Error<HTTP_CODE>
 where
   E: Into<anyhow::Error>,
 {
