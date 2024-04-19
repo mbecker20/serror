@@ -12,9 +12,9 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 /// Intermediate error type which can be converted to from any error using `?`.
 /// The standard `impl From<E> for Error` will attach StatusCode::INTERNAL_SERVER_ERROR,
-/// so if an alternative StatusCode is desired, you should use `.status_code` ([AddStatusCode])
+/// so if an alternative StatusCode is desired, you should use `.status_code` ([AddStatusCode] or [AddStatusCodeError])
 /// to add the status before using `?`.
-pub struct Error(pub StatusCode, pub anyhow::Error);
+pub struct Error(StatusCode, anyhow::Error);
 
 impl IntoResponse for Error {
   fn into_response(self) -> Response {
@@ -66,7 +66,7 @@ where
 /// Wrapper for axum::Json that converts parsing error to serror::Error
 #[derive(FromRequest)]
 #[from_request(via(axum::Json), rejection(JsonError))]
-pub struct Json<T>(T);
+pub struct Json<T>(pub T);
 
 impl<T: Serialize> IntoResponse for Json<T> {
   fn into_response(self) -> Response {
