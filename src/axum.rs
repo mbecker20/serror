@@ -1,8 +1,10 @@
 use axum::{
+  extract::{rejection::JsonRejection, FromRequest},
   http::StatusCode,
   response::{IntoResponse, Response},
 };
 use axum_extra::{headers::ContentType, TypedHeader};
+use serde::Serialize;
 
 use crate::serialize_error;
 
@@ -59,4 +61,30 @@ where
   R: Into<std::result::Result<T, E>>,
   E: Into<anyhow::Error>,
 {
+}
+
+/// Wrapper for axum::Json that converts parsing error to serror::Error
+#[derive(FromRequest)]
+#[from_request(via(axum::Json), rejection(JsonError))]
+pub struct Json<T>(T);
+
+impl<T: Serialize> IntoResponse for Json<T> {
+  fn into_response(self) -> Response {
+    axum::Json(self.0).into_response()
+  }
+}
+
+pub struct JsonError(Error);
+
+/// Convert the JsonRejection into JsonError(serror::Error)
+impl From<JsonRejection> for JsonError {
+  fn from(rejection: JsonRejection) -> Self {
+    Self(Error(rejection.status(), rejection.into()))
+  }
+}
+
+impl IntoResponse for JsonError {
+  fn into_response(self) -> Response {
+    self.0.into_response()
+  }
 }

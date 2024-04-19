@@ -7,7 +7,7 @@ pub use serror::Serror;
 #[cfg(feature = "axum")]
 mod axum;
 #[cfg(feature = "axum")]
-pub use crate::axum::{Error, Result, AddStatusCode, AddStatusCodeError};
+pub use crate::axum::{AddStatusCode, AddStatusCodeError, Error, Json, JsonError, Result};
 
 pub fn serialize_error(e: &anyhow::Error) -> String {
   try_serialize_error(e).unwrap_or_else(|_| format!("{e:#?}"))
