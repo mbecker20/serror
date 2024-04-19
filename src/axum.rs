@@ -34,12 +34,29 @@ where
   }
 }
 
-/// Convenience trait to convert errors into serror::Error by adding status
+/// Convenience trait to convert any Error into serror::Error by adding status
 /// and converting error into anyhow error.
-pub trait AddStatusCode: Into<anyhow::Error> {
+pub trait AddStatusCodeError: Into<anyhow::Error> {
   fn status_code(self, status_code: StatusCode) -> Error {
     Error(status_code, self.into())
   }
 }
 
-impl<E> AddStatusCode for E where E: Into<anyhow::Error> {}
+impl<E> AddStatusCodeError for E where E: Into<anyhow::Error> {}
+
+/// Convenience trait to convert Result into serror::Result by adding status to the inner error, if it exists.
+pub trait AddStatusCode<T, E>: Into<std::result::Result<T, E>>
+where
+  E: Into<anyhow::Error>,
+{
+  fn status_code(self, status_code: StatusCode) -> Result<T> {
+    self.into().map_err(|e| e.status_code(status_code))
+  }
+}
+
+impl<R, T, E> AddStatusCode<T, E> for R
+where
+  R: Into<std::result::Result<T, E>>,
+  E: Into<anyhow::Error>,
+{
+}
