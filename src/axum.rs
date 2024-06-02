@@ -14,7 +14,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// The standard `impl From<E> for Error` will attach StatusCode::INTERNAL_SERVER_ERROR,
 /// so if an alternative StatusCode is desired, you should use `.status_code` ([AddStatusCode] or [AddStatusCodeError])
 /// to add the status before using `?`.
-pub struct Error(StatusCode, anyhow::Error);
+pub struct Error(pub StatusCode, pub anyhow::Error);
 
 impl IntoResponse for Error {
   fn into_response(self) -> Response {
