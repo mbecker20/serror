@@ -21,6 +21,11 @@ pub struct Error {
 }
 
 impl Error {
+  pub fn status_code(mut self, status_code: StatusCode) -> Error {
+    self.status = status_code;
+    self
+  }
+
   pub fn header(mut self, name: impl IntoHeaderName, value: HeaderValue) -> Error {
     self.headers.append(name, value);
     self
@@ -89,8 +94,34 @@ where
 {
 }
 
+/// Convenience trait to convert any Error into serror::Error by adding headers
+/// and converting error into anyhow error.
+pub trait AddHeadersError: Into<anyhow::Error> {
+  fn header(self, name: impl IntoHeaderName, value: HeaderValue) -> Error {
+    let mut headers = HeaderMap::with_capacity(1);
+    headers.append(name, value);
+    Error {
+      headers,
+      status: StatusCode::INTERNAL_SERVER_ERROR,
+      error: self.into(),
+    }
+  }
+  fn headers(self, headers: HeaderMap) -> Error {
+    Error {
+      headers,
+      status: StatusCode::INTERNAL_SERVER_ERROR,
+      error: self.into(),
+    }
+  }
+}
+
+impl<E> AddHeadersError for E where E: Into<anyhow::Error> {}
+
 /// Convenience trait to add headers to a serror::Result directly.
-pub trait AddHeaders<T>: Into<std::result::Result<T, Error>> {
+pub trait AddHeaders<T, E>: Into<std::result::Result<T, E>>
+where
+  E: Into<anyhow::Error>,
+{
   fn header(self, name: impl IntoHeaderName, value: HeaderValue) -> Result<T> {
     self.into().map_err(|e| e.header(name, value))
   }
@@ -102,7 +133,12 @@ pub trait AddHeaders<T>: Into<std::result::Result<T, Error>> {
   }
 }
 
-impl<R, T> AddHeaders<T> for R where R: Into<Result<T>> {}
+impl<R, T, E> AddHeaders<T, E> for R
+where
+  R: Into<std::result::Result<T, E>>,
+  E: Into<anyhow::Error>,
+{
+}
 
 /// Wrapper for axum::Json that converts parsing error to serror::Error
 #[derive(FromRequest)]
