@@ -8,7 +8,7 @@ pub use serror::Serror;
 mod axum;
 #[cfg(feature = "axum")]
 pub use crate::axum::{
-  AddHeaders, AddStatusCode, AddStatusCodeError, Error, Json, JsonError, Result,
+  AddHeaders, AddHeadersError, AddStatusCode, AddStatusCodeError, Error, Json, JsonError, Result,
 };
 
 pub fn serialize_error(e: &anyhow::Error) -> String {
