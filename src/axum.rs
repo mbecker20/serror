@@ -94,9 +94,11 @@ pub trait AddHeaders<T>: Into<std::result::Result<T, Error>> {
   fn header(self, name: impl IntoHeaderName, value: HeaderValue) -> Result<T> {
     self.into().map_err(|e| e.header(name, value))
   }
-  
-  fn headers(self, headers: HeaderMap) -> Result<T> {
-    self.into().map_err(|e| e.headers(headers))
+
+  /// Some headers might want to be attached in both Ok case and Err case.
+  /// Borrow headers here so they can be used later, as they will only be cloned in err case.
+  fn headers(self, headers: &HeaderMap) -> Result<T> {
+    self.into().map_err(|e| e.headers(headers.clone()))
   }
 }
 
