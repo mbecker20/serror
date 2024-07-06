@@ -1,3 +1,5 @@
+use std::error::Error as StdError;
+
 use anyhow::anyhow;
 use axum::{
   body::Body,
@@ -160,7 +162,7 @@ impl From<JsonRejection> for JsonError {
     Self(Error {
       status: rejection.status(),
       headers: Default::default(),
-      error: anyhow!("{}", rejection.body_text())
+      error: anyhow!("{:?}", rejection.source())
         .context("Failed to deserialize the JSON body into the target type"),
     })
   }
