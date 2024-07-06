@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use axum::{
   body::Body,
   extract::{rejection::JsonRejection, FromRequest},
@@ -159,7 +160,8 @@ impl From<JsonRejection> for JsonError {
     Self(Error {
       status: rejection.status(),
       headers: Default::default(),
-      error: rejection.into(),
+      error: anyhow!("{}", rejection.body_text())
+        .context("Failed to deserialize the JSON body into the target type"),
     })
   }
 }
