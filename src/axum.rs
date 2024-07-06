@@ -162,8 +162,7 @@ impl From<JsonRejection> for JsonError {
     Self(Error {
       status: rejection.status(),
       headers: Default::default(),
-      error: anyhow!("{:?}", rejection.source())
-        .context("Failed to deserialize the JSON body into the target type"),
+      error: anyhow::Error::msg(rejection.body_text()),
     })
   }
 }
