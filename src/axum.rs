@@ -1,6 +1,3 @@
-use std::error::Error as StdError;
-
-use anyhow::anyhow;
 use axum::{
   body::Body,
   extract::{rejection::JsonRejection, FromRequest},
