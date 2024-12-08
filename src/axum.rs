@@ -51,6 +51,12 @@ impl IntoResponse for Error {
   }
 }
 
+impl From<Error> for Response {
+  fn from(value: Error) -> Self {
+    value.into_response()
+  }
+}
+
 impl<E> From<E> for Error
 where
   E: Into<anyhow::Error>,
