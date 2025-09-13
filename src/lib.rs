@@ -31,6 +31,16 @@ pub fn try_serialize_error_pretty(e: &anyhow::Error) -> anyhow::Result<String> {
   Ok(res)
 }
 
+pub fn serialize_error_bytes(e: &anyhow::Error) -> Vec<u8> {
+  try_serialize_error_bytes(e).unwrap_or_else(|_| format!("{e:#?}").into_bytes())
+}
+
+pub fn try_serialize_error_bytes(e: &anyhow::Error) -> anyhow::Result<Vec<u8>> {
+  let serror: Serror = e.into();
+  let res = serde_json::to_vec(&serror)?;
+  Ok(res)
+}
+
 pub fn deserialize_error(json: String) -> anyhow::Error {
   serror_into_error(deserialize_serror(json))
 }
