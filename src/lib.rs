@@ -42,7 +42,7 @@ pub fn try_serialize_error_bytes(e: &anyhow::Error) -> anyhow::Result<Vec<u8>> {
 }
 
 pub fn deserialize_error(json: String) -> anyhow::Error {
-  serror_into_error(deserialize_serror(json))
+  serror_into_anyhow_error(deserialize_serror(json))
 }
 
 pub fn deserialize_serror(json: String) -> Serror {
@@ -57,7 +57,7 @@ pub fn try_deserialize_serror(json: &str) -> anyhow::Result<Serror> {
 }
 
 pub fn deserialize_error_bytes(json: &[u8]) -> anyhow::Error {
-  serror_into_error(deserialize_serror_bytes(json))
+  serror_into_anyhow_error(deserialize_serror_bytes(json))
 }
 
 pub fn deserialize_serror_bytes(json: &[u8]) -> Serror {
@@ -74,7 +74,7 @@ pub fn try_deserialize_serror_bytes(json: &[u8]) -> anyhow::Result<Serror> {
   serde_json::from_slice(json).context("failed to deserialize string into Serror")
 }
 
-fn serror_into_error(mut serror: Serror) -> anyhow::Error {
+pub fn serror_into_anyhow_error(mut serror: Serror) -> anyhow::Error {
   let mut e = match serror.trace.pop() {
     None => return anyhow::Error::msg(serror.error),
     Some(msg) => anyhow::Error::msg(msg),
